@@ -21,7 +21,7 @@ CHARACTER_SPEED = 5
 
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("2D Character Creation Game")
+pygame.display.set_caption("Silly Wittle Game")
 
 # Load sprite sheet
 sprite_sheet = pygame.image.load('./slimes/Green_Slime/Run.png')
@@ -199,11 +199,50 @@ scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
 scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
 pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
 
+
+
+def fill_tileset(tileset):
+    # Fill the screen with the tileset
+    tile_width, tile_height = tileset.get_size()
+    for y in range(0, SCREEN_HEIGHT, tile_height):
+        for x in range(0, SCREEN_WIDTH, tile_width):
+            screen.blit(tileset, (x, y))
+
+# Initialize the tileset positions
+def initialize_random_tilesets(tilesets):
+    sample_tileset = pygame.image.load(tilesets["area1"])
+    tile_width, tile_height = sample_tileset.get_size()
+    positions = []
+    for y in range(0, SCREEN_HEIGHT, tile_height):
+        for x in range(0, SCREEN_WIDTH, tile_width):
+            random_tileset = random.choice(list(tilesets.values()))
+            random_tileset = pygame.image.load(random_tileset)
+            positions.append((random_tileset, x, y))
+    return positions
+
+
+def draw_tilesets(positions):
+    for tileset, x, y in positions:
+        screen.blit(tileset, (x, y))
+
+
+# def fill_random_tilesets(tilesets):
+#     # Fill the screen with random tilesets
+#     sample_tileset = pygame.image.load(tilesets["area1"])
+#     tile_width, tile_height = sample_tileset.get_size()
+#     # Fill the screen with random tilesets
+#     for y in range(0, SCREEN_HEIGHT, tile_height):
+#         for x in range(0, SCREEN_WIDTH, tile_width):
+#             random_tileset = random.choice(list(tilesets.values()))
+#             random_tileset = pygame.image.load(random_tileset)
+#             screen.blit(random_tileset, (x, y))
+
 def character_creation_screen():
     creation_running = True
     global hat_added, pet_added
     global current_accessory_index, accessory_image, accessory_x_offset, accessory_y_offset
     global current_pet_index, pet_image
+    positions = initialize_random_tilesets(tilesets)
     while creation_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -281,7 +320,6 @@ def character_creation_screen():
                     accessory_x_offset = (CHARACTER_WIDTH - scaled_accessory_width) // 2
                     accessory_y_offset = CHARACTER_HEIGHT // 2
                     hat_added = True
-                    pet_added = True
                 elif (right_arrow_x <= mouse_x <= right_arrow_x + arrow_width and
                         right_arrow_y <= mouse_y <= right_arrow_y + arrow_height):
                     current_accessory_index = (current_accessory_index + 1) % len(accessories)
@@ -293,7 +331,6 @@ def character_creation_screen():
                     accessory_x_offset = (CHARACTER_WIDTH - scaled_accessory_width) // 2
                     accessory_y_offset = CHARACTER_HEIGHT // 2
                     hat_added = True
-                    pet_added = True
                 elif (pet_left_arrow_x <= mouse_x <= pet_left_arrow_x + arrow_width and
                         pet_left_arrow_y <= mouse_y <= pet_left_arrow_y + arrow_height):
                     current_pet_index = (current_pet_index - 1) % len(pets)
@@ -302,7 +339,6 @@ def character_creation_screen():
                     scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                    pet_added = True
                     pet_added = True
                 elif (pet_right_arrow_x <= mouse_x <= pet_right_arrow_x + arrow_width and
                         pet_right_arrow_y <= mouse_y <= pet_right_arrow_y + arrow_height):
@@ -313,11 +349,11 @@ def character_creation_screen():
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
                     pet_added = True
-                    pet_added = True
                 else:
                     print("No arrow clicked")
 
-        screen.fill(WHITE)
+        # tileset = pygame.image.load(tilesets[current_area])
+        draw_tilesets(positions)
         font = pygame.font.Font(None, 36)
         text = font.render("Press Enter to start the game", True, BLACK)
         screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, 10))
@@ -335,6 +371,12 @@ def character_creation_screen():
         pygame.draw.polygon(screen, ARROW_COLOR, right_arrow_points)
         pygame.draw.polygon(screen, ARROW_COLOR, pet_left_arrow_points)
         pygame.draw.polygon(screen, ARROW_COLOR, pet_right_arrow_points)
+
+        accessories_text = font.render("Accessories", True, BLACK)
+        pets_text = font.render("Pets", True, BLACK)
+        screen.blit(accessories_text, (left_arrow_points[0][0] - accessories_text.get_width() - 20, left_arrow_points[0][1] - accessories_text.get_height() // 2))
+        screen.blit(pets_text, (pet_left_arrow_points[0][0] - pets_text.get_width() - 20, pet_left_arrow_points[0][1] - pets_text.get_height() // 2))
+
 
         pygame.display.flip()
 
@@ -453,10 +495,7 @@ while running:
       current_area
     )
 
-    # Fill the screen with the tileset
-    for y in range(0, SCREEN_HEIGHT, tile_height):
-        for x in range(0, SCREEN_WIDTH, tile_width):
-            screen.blit(tileset, (x, y))
+    fill_tileset(tileset)
 
     # Draw the house in area1
     draw_rocks(current_area)
