@@ -191,7 +191,9 @@ pet_right_arrow_points = [(pet_right_arrow_x, pet_right_arrow_y), (pet_right_arr
 pets = ['./slime_pet/PNG/Slime1/Walk/Slime1_Walk_body.png', './slime_pet/PNG/Slime2/Walk/Slime2_Walk_body.png', './slime_pet/PNG/Slime3/Walk/Slime3_Walk_body.png']
 pets_frames = [get_frames(pygame.image.load(pet), 8, 4) for pet in pets]
 current_pet_index = 0
-pet_image = pets_frames[current_pet_index][0]
+pet_frames = pets_frames[current_pet_index]
+reversed_pet_frames = [pygame.transform.flip(frame, True, False) for frame in pet_frames]
+pet_image = pet_frames[0]
 pet_width, pet_height = pet_image.get_size()
 hat_added = False
 pet_added = False
@@ -239,7 +241,7 @@ def draw_tilesets(positions):
 
 def character_creation_screen():
     creation_running = True
-    global hat_added, pet_added
+    global hat_added, pet_added, pet_frames, pet_image
     global current_accessory_index, accessory_image, accessory_x_offset, accessory_y_offset
     global current_pet_index, pet_image
     positions = initialize_random_tilesets(tilesets)
@@ -262,10 +264,11 @@ def character_creation_screen():
                     accessory_x_offset = (CHARACTER_WIDTH - scaled_accessory_width) // 2
                     accessory_y_offset = CHARACTER_HEIGHT // 2
                     hat_added = True
-                    scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
-                    scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
-                    pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                    pet_added = True
+                    # scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
+                    # scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
+                    # pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
+
+                    # pet_added = True
                 elif event.key == pygame.K_LEFT:
                   # Change accessory with left arrow key
                   current_accessory_index = (current_accessory_index - 1) % len(accessories)
@@ -277,11 +280,9 @@ def character_creation_screen():
                   accessory_x_offset = (CHARACTER_WIDTH - scaled_accessory_width) // 2
                   accessory_y_offset = CHARACTER_HEIGHT // 2
                   hat_added = True
-                  pet_width, pet_height = pet_image.get_size()
-                  scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
-                  scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
-                  pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                  pet_added = True
+                  # pet_width, pet_height = pet_image.get_size()
+                  # scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
+                  # scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                 elif event.key == pygame.K_DOWN:
                     # Change pet with down arrow key
                     current_pet_index = (current_pet_index + 1) % len(pets)
@@ -294,7 +295,7 @@ def character_creation_screen():
                     scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                    pet_added = True
+                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
                 elif event.key == pygame.K_UP:
                     # Change pet with up arrow key
                     current_pet_index = (current_pet_index - 1) % len(pets)
@@ -307,6 +308,7 @@ def character_creation_screen():
                     scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
+                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
                 if (left_arrow_x <= mouse_x <= left_arrow_x + arrow_width and
@@ -340,6 +342,9 @@ def character_creation_screen():
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
                     pet_added = True
+                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
+                    
+                    
                 elif (pet_right_arrow_x <= mouse_x <= pet_right_arrow_x + arrow_width and
                         pet_right_arrow_y <= mouse_y <= pet_right_arrow_y + arrow_height):
                     current_pet_index = (current_pet_index + 1) % len(pets)
@@ -349,6 +354,7 @@ def character_creation_screen():
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
                     pet_added = True
+                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
                 else:
                     print("No arrow clicked")
 
@@ -505,10 +511,13 @@ while running:
     if hat_added:
         screen.blit(accessory_image, (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset))
     if pet_added:
-        screen.blit(pet_image, (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset + 50))
+        # screen.blit(pet_image, (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset + 50))
+        screen.blit(pet_frames[current_frame], (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset + 50))
     # Draw the character
     if moving_left:
         screen.blit(reversed_frames[current_frame], (character_x - CHARACTER_WIDTH // 2, character_y - CHARACTER_HEIGHT // 2))
+        if pet_added:
+          screen.blit(pet_frames[current_frame], (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset + 50))
     else:
         screen.blit(frames[current_frame], (character_x - CHARACTER_WIDTH // 2, character_y - CHARACTER_HEIGHT // 2))
 
