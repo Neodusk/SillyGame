@@ -5,6 +5,8 @@ import random
 # Initialize pygame
 pygame.init()
 
+# todo: debug fix
+debug = False
 # Screen dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -110,15 +112,40 @@ def initialize_rocks(area, top: bool = False, bottom: bool = False, left: bool =
             rock_positions[area].append((rock_image, x, SCREEN_HEIGHT - scaled_rock_height))
             rock_masks[area].append(pygame.mask.from_surface(rock_image))
 
-def draw_rocks(area):
-    for rock_image, x, y in rock_positions[area]:
-        screen.blit(rock_image, (x, y))
+def draw_rocks(area, debug=False):
+    for rock_image, rock_x, rock_y in rock_positions[area]:
+        screen.blit(rock_image, (rock_x, rock_y))
+        rock_rect = pygame.Rect(rock_x, rock_y, rock_image.get_width(), rock_image.get_height())
+        if debug:
+          pygame.draw.rect(screen, (255, 0, 0), rock_rect, 2)  # Red color with a thickness of 2
 
 # Initialize rocks for area1
 initialize_rocks('area1', top=True, left=True)
 initialize_rocks('area2', top=True, right=True)
 initialize_rocks('area3', bottom=True, left=True)
 initialize_rocks('area4', bottom=True, right=True)
+
+def check_collisions(character_rect: pygame.Rect, area):
+    for rock_image, rock_x, rock_y in rock_positions[area]:
+        rock_rect = pygame.Rect(rock_x, rock_y, rock_image.get_width(), rock_image.get_height())
+        if character_rect.colliderect(rock_rect):
+            return True
+    return False
+
+def get_character_collision(character_x, character_y) -> pygame.Rect:
+    shift_amount = CHARACTER_WIDTH // 2
+    character_rect = pygame.Rect(
+        character_x + (CHARACTER_WIDTH - CHARACTER_WIDTH * 3 // 4) // 2 - shift_amount, 
+        character_y + (CHARACTER_HEIGHT - CHARACTER_HEIGHT * 2 // 3) // 2, 
+        CHARACTER_WIDTH * 3 // 4, 
+        CHARACTER_HEIGHT * 3 // 4
+    )
+    return character_rect
+
+def draw_character_with_collision(character_x, character_y):
+    # Draw the character
+    character_rect = get_character_collision(character_x, character_y)
+    pygame.draw.rect(screen, (0, 255, 0), character_rect, 2)  # Green color with a thickness of 2
 
 
 # Function to extract frames from sprite sheet
@@ -395,23 +422,43 @@ def handle_movement(new_character_x, new_character_y, current_frame, animation_c
     moving_left = False
     character_x = new_character_x
     character_y = new_character_y
+    character_rect = get_character_collision(new_character_x, new_character_y)
     if keys[pygame.K_LEFT]:
         new_character_x -= CHARACTER_SPEED
-        character_x = new_character_x
-        moved = True
-        moving_left = True
+        character_rect.x = new_character_x - CHARACTER_WIDTH // 2
+        if not check_collisions(character_rect, current_area):
+          character_x = new_character_x
+          moved = True
+          moving_left = True
+        else:
+          print("Collision detected! LEFT")
     if keys[pygame.K_RIGHT]:
         new_character_x += CHARACTER_SPEED
-        character_x = new_character_x
-        moved = True
+        character_rect.x = new_character_x
+        if not check_collisions(character_rect, current_area):
+          character_x = new_character_x
+          moved = True
+          moving_left = False
+        else:
+          print("Collision detected! RIGHT")
     if keys[pygame.K_UP]:
         new_character_y -= CHARACTER_SPEED
-        character_y = new_character_y
-        moved = True
+        character_rect.y = new_character_y 
+        if not check_collisions(character_rect, current_area):
+          character_y = new_character_y
+          moved = True
+          moving_left = False
+        else:
+          print("Collision detected! UP")
     if keys[pygame.K_DOWN]:
         new_character_y += CHARACTER_SPEED
-        character_y = new_character_y
-        moved = True
+        character_rect.y = new_character_y
+        if not check_collisions(character_rect, current_area):
+          character_y = new_character_y
+          moved = True
+          moving_left = False
+        else:
+          print("Collision detected! DOWN")
     # Update the frame only if moved left or right
     if moved and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         animation_counter += 1
@@ -504,10 +551,12 @@ while running:
     fill_tileset(tileset)
 
     # Draw the house in area1
-    draw_rocks(current_area)
+    draw_rocks(current_area, debug)
     if current_area == 'area1':
         screen.blit(house_image, (house_x, house_y))
 
+    if debug:
+      draw_character_with_collision(character_x, character_y)
     if hat_added:
         screen.blit(accessory_image, (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset))
     if pet_added:
