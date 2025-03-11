@@ -21,6 +21,12 @@ CHARACTER_WIDTH = 112  # Frame width
 CHARACTER_HEIGHT = 128  # Frame height
 CHARACTER_SPEED = 5
 
+
+MOVE_LEFT = 0
+MOVE_RIGHT = 0
+MOVE_UP = 0
+MOVE_DOWN = 0
+
 # Create the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Silly Wittle Game")
@@ -280,7 +286,7 @@ def character_creation_screen():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     creation_running = False
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     # Change accessory with right arrow key
                     current_accessory_index = (current_accessory_index + 1) % len(accessories)
                     accessory_image = pygame.image.load(accessories[current_accessory_index])
@@ -296,7 +302,7 @@ def character_creation_screen():
                     # pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
 
                     # pet_added = True
-                elif event.key == pygame.K_LEFT:
+                elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
                   # Change accessory with left arrow key
                   current_accessory_index = (current_accessory_index - 1) % len(accessories)
                   accessory_image = pygame.image.load(accessories[current_accessory_index])
@@ -310,31 +316,25 @@ def character_creation_screen():
                   # pet_width, pet_height = pet_image.get_size()
                   # scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                   # scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     # Change pet with down arrow key
-                    current_pet_index = (current_pet_index + 1) % len(pets)
-                    pet_image = pygame.image.load(pets[current_pet_index])
-                    pet_width, pet_height = pet_image.get_size()
-                    scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
-                    scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
-                    pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                    pet_added = True
-                    scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
-                    scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
-                    pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
-                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
-                elif event.key == pygame.K_UP:
-                    # Change pet with up arrow key
                     current_pet_index = (current_pet_index - 1) % len(pets)
-                    pet_image = pygame.image.load(pets[current_pet_index])
+                    pet_image = pets_frames[current_pet_index][0]  # Use the first frame of the new pet
                     pet_width, pet_height = pet_image.get_size()
                     scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
                     pet_added = True
+                    pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    # Change pet with up arrow key
+                    current_pet_index = (current_pet_index + 1) % len(pets)
+                    pet_image = pets_frames[current_pet_index][0]  # Use the first frame of the new pet
+                    pet_width, pet_height = pet_image.get_size()
                     scaled_pet_width = pet_width * 2  # Adjust the scaling factor as needed
                     scaled_pet_height = pet_height * 2  # Adjust the scaling factor as needed
                     pet_image = pygame.transform.scale(pet_image, (scaled_pet_width, scaled_pet_height))
+                    pet_added = True
                     pet_frames = [pygame.transform.scale(frame, (scaled_pet_width, scaled_pet_height)) for frame in pets_frames[current_pet_index]]
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = event.pos
@@ -416,51 +416,56 @@ def character_creation_screen():
 # Show the character creation screen
 character_creation_screen()
 
-
+# todo: handle movement through rdp 
 def handle_movement(new_character_x, new_character_y, current_frame, animation_counter):
     moved = False
     moving_left = False
     character_x = new_character_x
     character_y = new_character_y
     character_rect = get_character_collision(new_character_x, new_character_y)
-    if keys[pygame.K_LEFT]:
+    keys = pygame.key.get_pressed()
+    if MOVE_LEFT:
         new_character_x -= CHARACTER_SPEED
         character_rect.x = new_character_x - CHARACTER_WIDTH // 2
         if not check_collisions(character_rect, current_area):
           character_x = new_character_x
           moved = True
           moving_left = True
+          print("Moving left")
         else:
           print("Collision detected! LEFT")
-    if keys[pygame.K_RIGHT]:
+    if MOVE_RIGHT:
         new_character_x += CHARACTER_SPEED
         character_rect.x = new_character_x
         if not check_collisions(character_rect, current_area):
           character_x = new_character_x
           moved = True
           moving_left = False
+          print("Moving right")
         else:
           print("Collision detected! RIGHT")
-    if keys[pygame.K_UP]:
+    if MOVE_UP:
         new_character_y -= CHARACTER_SPEED
         character_rect.y = new_character_y 
         if not check_collisions(character_rect, current_area):
           character_y = new_character_y
           moved = True
           moving_left = False
+          print("Moving up")
         else:
           print("Collision detected! UP")
-    if keys[pygame.K_DOWN]:
+    if MOVE_DOWN:
         new_character_y += CHARACTER_SPEED
         character_rect.y = new_character_y
         if not check_collisions(character_rect, current_area):
           character_y = new_character_y
           moved = True
           moving_left = False
+          print("Moving down")
         else:
           print("Collision detected! DOWN")
     # Update the frame only if moved left or right
-    if moved and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+    if moved and (MOVE_LEFT or MOVE_RIGHT):
         animation_counter += 1
         if animation_counter >= animation_speed:
             current_frame = (current_frame + 1) % frame_count
@@ -506,6 +511,13 @@ def load_location(character_x, character_y, tile_width, tile_height, tileset, cu
     tile_width, tile_height = tileset.get_size()
     return tile_width, tile_height, tileset, character_x, character_y, current_area
 
+def get_movement(keys):
+    global MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN
+    MOVE_LEFT = keys[pygame.K_LEFT] or keys[pygame.K_a]
+    MOVE_RIGHT = keys[pygame.K_RIGHT] or keys[pygame.K_d]
+    MOVE_UP = keys[pygame.K_UP] or keys[pygame.K_w]
+    MOVE_DOWN = keys[pygame.K_DOWN] or keys[pygame.K_s]
+    return MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, MOVE_UP
 
 # Main game loop
 running = True
@@ -517,10 +529,10 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
     # Get the keys pressed
     keys = pygame.key.get_pressed()
-
+    MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, MOVE_UP = get_movement(keys)
+    
     # Move the character
     moved = False
     new_character_x = character_x
@@ -569,8 +581,6 @@ while running:
           screen.blit(pet_frames[current_frame], (character_x - CHARACTER_WIDTH // 2 + accessory_x_offset, character_y - CHARACTER_HEIGHT // 2 + accessory_y_offset + 50))
     else:
         screen.blit(frames[current_frame], (character_x - CHARACTER_WIDTH // 2, character_y - CHARACTER_HEIGHT // 2))
-
-   
 
     # Update the display
     pygame.display.flip()
