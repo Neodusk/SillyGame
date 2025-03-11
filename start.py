@@ -273,6 +273,7 @@ def draw_tilesets(positions):
 #             screen.blit(random_tileset, (x, y))
 
 def character_creation_screen():
+    """Character creation screen"""
     creation_running = True
     global hat_added, pet_added, pet_frames, pet_image
     global current_accessory_index, accessory_image, accessory_x_offset, accessory_y_offset
@@ -283,6 +284,8 @@ def character_creation_screen():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            # it is best practice to use event.type to check for non-continuous pressing of keys
+            # so things outside of movement etc
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     creation_running = False
