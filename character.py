@@ -62,10 +62,11 @@ class Screen:
 
 class GameObject:
     """Base class for game objects with common attributes"""
-    def __init__(self, height, width, image, frames, rectangle, position, speed):
+    def __init__(self, height, width, image, current_frame, frames, rectangle, position, speed):
         self.height = height
         self.width = width
         self.image = image
+        self.current_frame = current_frame
         self.frames = frames
         self.rectangle = rectangle
         self.position = position # (x, y)
@@ -79,7 +80,7 @@ class GameObject:
         character_rect = pygame.Rect(
             position_x + (self.width - self.width * 3 // 4) // 2 - shift_amount, 
             position_y + (self.height - self.height * 2 // 3) // 2, 
-            self.width * 3 // 4, 
+            self.width * 3 // 4,
             self.height * 3 // 4
         )
         return character_rect
@@ -108,6 +109,7 @@ class Character(GameObject):
         height,
         width,
         image,
+        current_frame,
         frames,
         rectangle,
         position,
@@ -115,7 +117,7 @@ class Character(GameObject):
         accessory: Accessory,
         pet: Pet
         ):
-        super().__init__(height, width, image, frames, rectangle,  position, speed)
+        super().__init__(height, width, image, current_frame, frames, rectangle,  position, speed)
         self.accessory = accessory
         self.pet = pet
 

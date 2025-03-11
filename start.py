@@ -260,18 +260,6 @@ def draw_tilesets(positions):
     for tileset, x, y in positions:
         screen.blit(tileset, (x, y))
 
-
-# def fill_random_tilesets(tilesets):
-#     # Fill the screen with random tilesets
-#     sample_tileset = pygame.image.load(tilesets["area1"])
-#     tile_width, tile_height = sample_tileset.get_size()
-#     # Fill the screen with random tilesets
-#     for y in range(0, SCREEN_HEIGHT, tile_height):
-#         for x in range(0, SCREEN_WIDTH, tile_width):
-#             random_tileset = random.choice(list(tilesets.values()))
-#             random_tileset = pygame.image.load(random_tileset)
-#             screen.blit(random_tileset, (x, y))
-
 def character_creation_screen():
     """Character creation screen"""
     creation_running = True
