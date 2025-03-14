@@ -1,8 +1,10 @@
-"""Class for character objects"""
-import pygame
+"""Class for game objects"""
 import random
+import pygame
+
 
 class Screen:
+    """Screen class for handling drawing on the screen and screen backgrounds"""
     def __init__(self, width, height):
         self.height = height
         self.width = width
@@ -46,7 +48,7 @@ class Screen:
     def add_to_area_grid(self, area):
         """Add an area to the grid"""
         self.area_grid.append(area)
-    
+
     def replace_area_grid(self, area):
         """Replace the area grid with a new grid"""
         self.area_grid = area
@@ -54,7 +56,7 @@ class Screen:
     def set_current_area(self, row, column):
         """Set the current area""" 
         self.current_area = self.area_grid[row][column]
-    
+
     def find_area_coordinates(self, area = None):
         """Find the coordinates of the area in the grid"""
         if area is None:
@@ -125,7 +127,7 @@ class Screen:
         for tileset, position_x, position_y in positions:
             self.screen.blit(tileset, (position_x, position_y))
 
-        
+
 class GameObject:
     """Base class for game objects with common attributes"""
     def __init__(
@@ -158,37 +160,11 @@ class GameObject:
         self.position_y = position_y
         self.speed = speed
         self.__post_init__()
-    
-    # def get_collision(self, position_x = None, position_y = None):
-    #     """Get the collision of the object"""
-    #     shift_amount = self.width // 2
-    #     if not position_x:
-    #         position_x = self.position_x
-    #     if not position_y:
-    #         position_y = self.position_y
-    #     character_rect = pygame.Rect(
-    #         position_x + (self.width - self.width * 3 // 4) // 2 - shift_amount, 
-    #         position_y + (self.height - self.height * 2 // 3) // 2, 
-    #         self.width * 3 // 4,
-    #         self.height * 3 // 4
-    #     )
-    #     return character_rect
 
-    # def set_collision(self, rectangle = None):
-    #     """Set the collision of the object"""
-    #     if not rectangle:
-    #         self.rectangle = self.get_collision()
-    #     self.rectangle = rectangle
-
-    # def draw_collision(self, screen):
-    #     """Draw the collision of the object"""
-    #     character_rect = self.get_collision()
-    #     pygame.draw.rect(screen, (255, 0, 0), character_rect, 2)
-
-    def check_collisions(self, window_screen: Screen, new_position_x = None, new_position_y = None, reversed = False):
+    def check_collisions(self, window_screen: Screen, new_position_x = None, new_position_y = None, reverse_frame = False):
         """Check for collisions with the screen objects"""
-        mask = self.masks[self.current_frame] # if not self.moving_left else self.reversed_masks[self.current_frame]
-        if reversed:
+        mask = self.masks[self.current_frame]
+        if reverse_frame:
             mask = self.reversed_masks[self.current_frame]
         if new_position_x is None:
             new_position_x = self.position_x
@@ -202,25 +178,13 @@ class GameObject:
                     if mask.overlap(collision_mask, offset):
                         return True
         return False
-    # def check_collisions(self, window_screen: Screen):
-    #     """Check for collisions with the screen objects"""
-    #     for collision_image, position_x, position_y in window_screen.collidable_positions[window_screen.current_area]:
-    #         collision_rect = pygame.Rect(
-    #             position_x,
-    #             position_y,
-    #             collision_image.get_width(),
-    #             collision_image.get_height()
-    #         )
-    #         # rectangle = self.get_collision()
-    #         if self.rectangle.colliderect(collision_rect):
-    #             return True
-    
+ 
     def set_image(self, image = None):
         """Set the image of the game object"""
         if not image:
             if self.frames is not None:
                 self.image = self.frames[self.current_frame]
-   
+
     def set_reversed_frames(self):
         """Set the reversed frames for the game object"""
         if not self.reversed_frames and self.frames is not None:
@@ -232,7 +196,7 @@ class GameObject:
             self.masks = [pygame.mask.from_surface(frame) for frame in self.frames]
         if self.reversed_frames is not None:
             self.reversed_masks  = [pygame.mask.from_surface(frame) for frame in self.reversed_frames]
-    
+
     def __post_init__(self):
         # self.set_collision()
         self.set_image()
@@ -356,16 +320,8 @@ class Character(GameObject):
 
     def move(self, new_position_x, new_position_y, window_screen: Screen, MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN):
         """Move the game object and handle collisions"""
-        moved = False
-        moving_left = False
         position_x = new_position_x
         position_y = new_position_y
-        # self.position_x = new_position_x
-        # self.position_y = new_position_y
-        # character_rect = self.get_collision(new_position_x, new_position_y)
-        # self.set_collision(character_rect)
-
-        
         if MOVE_LEFT:
             new_position_x -= self.speed
             # self.rectangle.x = new_position_x - self.width // 2
@@ -374,8 +330,6 @@ class Character(GameObject):
                 # character_x = new_position_x
                 self.position_x = new_position_x
                 position_x = new_position_x
-                moved = True
-                moving_left = True
                 window_screen.screen.blit(
                     self.reversed_frames[self.current_frame],
                     (self.position_x - self.width // 2, self.position_y - self.height // 2)
@@ -391,17 +345,12 @@ class Character(GameObject):
                     self.animation_counter = 0
             else:
                 print("Collision detected")
-                
+
         if MOVE_RIGHT:
             new_position_x += self.speed
-            # self.rectangle.x = new_position_x
-            # self.set_collision(character_rect)
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
-                # character_x = new_position_x
                 self.position_x = new_position_x
                 position_x = new_position_x
-                moved = True
-                moving_left = False
                 window_screen.screen.blit(
                     self.frames[self.current_frame],
                     (self.position_x - self.width // 2, self.position_y - self.height // 2)
@@ -415,14 +364,9 @@ class Character(GameObject):
                 print("Collision detected")
         if MOVE_UP:
             new_position_y -= self.speed
-            # self.rectangle.y = new_position_y 
-            # self.set_collision(character_rect)
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
-                # character_y = new_position_y
                 position_y = new_position_y
                 self.position_y = new_position_y
-                moved = True
-                moving_left = False
                 window_screen.screen.blit(
                     self.frames[self.current_frame],
                     (self.position_x - self.width // 2, self.position_y - self.height // 2)
@@ -431,13 +375,9 @@ class Character(GameObject):
                 print("Collision detected")
         if MOVE_DOWN:
             new_position_y += self.speed
-            # self.rectangle.y = new_position_y
-            # self.set_collision(character_rect)
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
                 self.position_y = new_position_y
                 position_y = new_position_y
-                moved = True
-                moving_left = False
                 window_screen.screen.blit(
                     self.frames[self.current_frame],
                     (self.position_x - self.width // 2, self.position_y - self.height // 2)
