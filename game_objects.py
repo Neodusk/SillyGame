@@ -69,7 +69,6 @@ class Screen:
     def load_current_area(self):
         """Load the Screen with the current area"""
         self.tileset = pygame.image.load(self.tilesets[self.current_area])
-        # print(f"Loading {self.current_area} tileset")
         self.tile_width, self.tile_height = self.tileset.get_size()
 
     def load_location(self, character: "Character"):
@@ -239,8 +238,6 @@ class Pet(GameObject):
             position_y,
             speed
     )
-    # def __init__(self, height, width, image, frames, position):
-    #     super().__init__(height, width, image, frames, position)
 
 class Accessory(GameObject):
     """Class for accessory objects"""
