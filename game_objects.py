@@ -324,10 +324,7 @@ class Character(GameObject):
         position_y = new_position_y
         if MOVE_LEFT:
             new_position_x -= self.speed
-            # self.rectangle.x = new_position_x - self.width // 2
-            # self.set_collision(character_rect)
             if not self.check_collisions(window_screen, new_position_x, new_position_y, True):
-                # character_x = new_position_x
                 self.position_x = new_position_x
                 position_x = new_position_x
                 window_screen.screen.blit(
