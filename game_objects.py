@@ -160,7 +160,7 @@ class GameObject:
         self.speed = speed
         self.__post_init__()
 
-    def check_collisions(self, window_screen: Screen, new_position_x = None, new_position_y = None, reverse_frame = False):
+    def check_collisions(self, window_screen: Screen, new_position_x=None, new_position_y=None, reverse_frame=False):
         """Check for collisions with the screen objects"""
         mask = self.masks[self.current_frame]
         if reverse_frame:
@@ -171,18 +171,23 @@ class GameObject:
             new_position_y = self.position_y
         for area, collidables in window_screen.collidable_positions.items():
             if area == window_screen.current_area:
-                for collision_image, position_x, position_y in collidables:
-                    collision_mask = pygame.mask.from_surface(collision_image)
-                    offset = (position_x - new_position_x, position_y - new_position_y)
+                for collision_image, position_x, position_y, collision_mask in collidables:
+                    offset_x = position_x - new_position_x
+                    offset_y = position_y - new_position_y
+                    offset = (offset_x, offset_y)
                     if mask.overlap(collision_mask, offset):
                         return True
         return False
  
-    def set_image(self, image = None):
+    def set_image(self, image = None, reverse_image=False):
         """Set the image of the game object"""
         if not image:
+            if reverse_image:
+                self.image = self.reversed_frames[self.current_frame]
             if self.frames is not None:
                 self.image = self.frames[self.current_frame]
+        else:
+            self.image = image
 
     def set_reversed_frames(self):
         """Set the reversed frames for the game object"""
@@ -192,10 +197,14 @@ class GameObject:
     def set_masks(self):
         """Set the masks for collision detection"""
         if self.frames is not None:
-            self.masks = [pygame.mask.from_surface(frame) for frame in self.frames]
+            self.masks = [pygame.mask.from_surface(frame, 250) for frame in self.frames]
         if self.reversed_frames is not None:
             self.reversed_masks  = [pygame.mask.from_surface(frame) for frame in self.reversed_frames]
-
+        # HACK: we shouldnt have to fill, something is still going on with the masks
+        for mask in self.masks:
+            mask.fill()
+        for mask in self.reversed_masks:
+            mask.fill()
     def __post_init__(self):
         # self.set_collision()
         self.set_image()
@@ -315,69 +324,76 @@ class Character(GameObject):
         self.accessory = accessory
         self.pet = pet
 
+    def update_frame(self, window_screen, reverse_frame=False):
+        """Update the frame and draw the character"""
+        if reverse_frame:
+            window_screen.screen.blit(
+                self.reversed_frames[self.current_frame],
+                (self.position_x - self.width // 2, self.position_y - self.height // 2)
+            )
+            # current_image = self.reversed_frames[self.current_frame]
+            # self.masks = pygame.mask.from_surface(current_image)
+            
+        else:
+            window_screen.screen.blit(
+                self.frames[self.current_frame],
+                (self.position_x - self.width // 2, self.position_y - self.height // 2)
+            )
+        # Draw the mask outline for visualization
+        outline = self.masks[self.current_frame].outline()
+        outline = [(self.position_x - self.width // 2 + x, self.position_y - self.height // 2 + y) for x, y in outline]
+        if len(outline) > 1:
+            pygame.draw.lines(window_screen.screen, (255, 0, 0), True, outline, 1)  # Red color for the mask outline
+        if self.get_pet():
+            window_screen.screen.blit(
+                self.get_pet().frames[self.current_frame],
+                (self.position_x - self.width // 2, self.position_y - self.height // 2 + 50)
+            )
+        self.animation_counter += 1
+        if self.animation_counter >= self.animation_speed:
+            self.current_frame = (self.current_frame + 1) % len(self.frames)
+            self.animation_counter = 0
+
     def move(self, new_position_x, new_position_y, window_screen: Screen, MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN):
         """Move the game object and handle collisions"""
         position_x = new_position_x
         position_y = new_position_y
+
         if MOVE_LEFT:
             new_position_x -= self.speed
             if not self.check_collisions(window_screen, new_position_x, new_position_y, True):
                 self.position_x = new_position_x
                 position_x = new_position_x
-                window_screen.screen.blit(
-                    self.reversed_frames[self.current_frame],
-                    (self.position_x - self.width // 2, self.position_y - self.height // 2)
-                )
-                if self.get_pet():
-                    window_screen.screen.blit(
-                        self.get_pet().frames[self.current_frame],
-                        (self.position_x - self.width // 2, self.position_y - self.height // 2 + 50)
-                    )
-                self.animation_counter += 1
-                if self.animation_counter >= self.animation_speed:
-                    self.current_frame = (self.current_frame + 1) % len(self.frames)
-                    self.animation_counter = 0
+                self.update_frame(window_screen, reverse_frame=True)
             else:
-                print("Collision detected")
+                print("Collision detected or out of bounds")
 
         if MOVE_RIGHT:
             new_position_x += self.speed
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
                 self.position_x = new_position_x
                 position_x = new_position_x
-                window_screen.screen.blit(
-                    self.frames[self.current_frame],
-                    (self.position_x - self.width // 2, self.position_y - self.height // 2)
-                )
-                self.animation_counter += 1
-                if self.animation_counter >= self.animation_speed:
-                    self.current_frame = (self.current_frame + 1) % len(self.frames)
-                    self.animation_counter = 0
-
+                self.update_frame(window_screen)
             else:
-                print("Collision detected")
+                print("Collision detected or out of bounds")
+
         if MOVE_UP:
             new_position_y -= self.speed
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
-                position_y = new_position_y
                 self.position_y = new_position_y
-                window_screen.screen.blit(
-                    self.frames[self.current_frame],
-                    (self.position_x - self.width // 2, self.position_y - self.height // 2)
-                )
+                position_y = new_position_y
+                self.update_frame(window_screen)
             else:
-                print("Collision detected")
+                print("Collision detected or out of bounds")
+
         if MOVE_DOWN:
             new_position_y += self.speed
             if not self.check_collisions(window_screen, new_position_x, new_position_y):
                 self.position_y = new_position_y
                 position_y = new_position_y
-                window_screen.screen.blit(
-                    self.frames[self.current_frame],
-                    (self.position_x - self.width // 2, self.position_y - self.height // 2)
-                )
+                self.update_frame(window_screen)
             else:
-                print("Collision detected")
+                print("Collision detected or out of bounds")
 
         return position_x, position_y
 

@@ -40,6 +40,14 @@ rock_positions = {
 }
 
 
+# TODO: We need to get the actual range of positions of the rocks somehow
+def combine_rock_tiles(rock_positions, width, height):
+    """Combine rock tiles into a single surface"""
+    combined_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+    for rock_image, rock_x, rock_y in rock_positions:
+        combined_surface.blit(rock_image, (rock_x, rock_y))
+    return combined_surface
+
 def initialize_rocks(wdw_screen: Screen, area, top: bool = False, bottom: bool = False, left: bool = False, right: bool = False):
     """Set up the rocks for the given area"""
     rock_images = [pygame.image.load(f'./tileset/2 Objects/2 Stone/{i}.png') for i in range(1, 7)]
@@ -52,7 +60,7 @@ def initialize_rocks(wdw_screen: Screen, area, top: bool = False, bottom: bool =
     scaled_rock_width = rock_width * 4
     scaled_rock_height = rock_height * 4
     
-    # Store positions and masks for rocks along the left border
+     # Store positions and masks for rocks along the left border
     if left:
         for y in range(0, window_screen.height, scaled_rock_height):
             rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
@@ -77,6 +85,37 @@ def initialize_rocks(wdw_screen: Screen, area, top: bool = False, bottom: bool =
             rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
             rock_positions[area].append((rock_image, x, window_screen.height - scaled_rock_height))
             wdw_screen.collidable_positions[area].append((rock_image, x, window_screen.height - scaled_rock_height))
+
+    # Combine rock tiles into a single surface
+    combined_surface = combine_rock_tiles(rock_positions[area], window_screen.width, window_screen.height)
+    combined_mask = pygame.mask.from_surface(combined_surface)
+    wdw_screen.collidable_positions[area] = [(combined_surface, 0, 0, combined_mask)]
+    
+    # # Store positions and masks for rocks along the left border
+    # if left:
+    #     for y in range(0, window_screen.height, scaled_rock_height):
+    #         rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
+    #         rock_positions[area].append((rock_image, 0, y))
+    #         wdw_screen.collidable_positions[area].append((rock_image, 0, y))
+    
+    # # Store positions and masks for rocks along the right border
+    # if right:
+    #     for y in range(0, window_screen.height, scaled_rock_height):
+    #         rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
+    #         rock_positions[area].append((rock_image, window_screen.width - scaled_rock_width, y))
+    #         wdw_screen.collidable_positions[area].append((rock_image, window_screen.width - scaled_rock_width, y))
+    # # Store positions and masks for rocks along the top border
+    # if top:
+    #     for x in range(0, window_screen.width, scaled_rock_width):
+    #         rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
+    #         rock_positions[area].append((rock_image, x, 0))
+    #         wdw_screen.collidable_positions[area].append((rock_image, x, 0))
+    # # Store positions and masks for rocks along the bottom border
+    # if bottom:
+    #     for x in range(0, window_screen.width, scaled_rock_width):
+    #         rock_image = pygame.transform.scale(random.choice(rock_images), (scaled_rock_width, scaled_rock_height))
+    #         rock_positions[area].append((rock_image, x, window_screen.height - scaled_rock_height))
+    #         wdw_screen.collidable_positions[area].append((rock_image, x, window_screen.height - scaled_rock_height))
 
 def draw_rocks(area: str):
     """Draw the rocks on the screen"""
